@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CTW Updates — Work Log &amp; Task Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Corporate Header -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">CTW</div>
+          <div>
+            <h1 class="brand-title">CTW Updates</h1>
+            <p class="brand-subtitle">Daily Work Log &amp; Pending Task Registry</p>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <span class="immutable-badge" title="All entries and status changes are permanently logged with timestamps and cannot be deleted.">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Immutable Audit Logs
+          </span>
+          <button type="button" id="refreshBtn" class="btn btn-secondary btn-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-container">
+      <!-- KPI Summary Strip -->
+      <section class="kpi-grid" aria-label="Workspace Summary">
+        <div class="kpi-card">
+          <span class="kpi-label">Today's Work Logs</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiTodayLogs">0</span>
+            <span class="kpi-meta" id="kpiTotalLogs">0 total</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Pending Tasks</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value kpi-value-accent" id="kpiPendingTasks">0</span>
+            <span class="kpi-meta" id="kpiOngoingMeta">0 ongoing</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Completed Tasks</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value kpi-value-success" id="kpiCompletedTasks">0</span>
+            <span class="kpi-meta" id="kpiTotalTasks">0 total tasks</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Team Members</span>
+          <div class="kpi-value-row">
+            <span class="kpi-value" id="kpiPeopleCount">0</span>
+            <span class="kpi-meta">Active roster</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Primary Navigation Tabs -->
+      <nav class="tab-bar" aria-label="Workspace Sections">
+        <button type="button" class="tab-btn active" data-tab="work-logs">
+          Daily Work Logs
+          <span class="tab-count" id="tabCountWorkLogs">0</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="tasks">
+          Pending Tasks &amp; Audit Log
+          <span class="tab-count" id="tabCountTasks">0</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="people">
+          Add People
+          <span class="tab-count" id="tabCountPeople">0</span>
+        </button>
+      </nav>
+
+      <!-- TAB 1: DAILY WORK LOGS -->
+      <section id="tab-work-logs" class="tab-panel active">
+        <div class="split-layout">
+          <!-- Work Log Entry Form -->
+          <aside class="card form-card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Log Daily Work</h2>
+                <p class="card-subtitle">Record what you or a teammate worked on today. Multiple entries per day are supported.</p>
+              </div>
+            </div>
+
+            <form id="workLogForm" class="form-stack">
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="workPersonSelect">Name <span class="req">*</span></label>
+                  <button type="button" class="inline-link-btn open-add-person">+ Add Person</button>
+                </div>
+                <select id="workPersonSelect" required>
+                  <option value="">Select team member...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="workFeatureInput">Feature <span class="req">*</span></label>
+                <input
+                  id="workFeatureInput"
+                  type="text"
+                  maxlength="200"
+                  placeholder="e.g. Client Reporting Dashboard"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="workDoneInput">Work Done <span class="req">*</span></label>
+                <textarea
+                  id="workDoneInput"
+                  rows="4"
+                  maxlength="4000"
+                  placeholder="Describe the work completed, milestones reached, or issues resolved..."
+                  required
+                ></textarea>
+              </div>
+
+              <div class="timestamp-notice">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>Logged automatically with date &amp; time: <strong id="liveClockWork">—</strong></span>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full" id="submitWorkLogBtn">
+                Submit Work Log
+              </button>
+            </form>
+          </aside>
+
+          <!-- Work Log History (Grouped by Name & Date) -->
+          <div class="card content-card">
+            <div class="card-header card-header-wrap">
+              <div>
+                <h2 class="card-title">Work Log History</h2>
+                <p class="card-subtitle">Full permanent history visible to all stakeholders, grouped by Name and Date.</p>
+              </div>
+
+              <div class="segmented-control" role="group" aria-label="Grouping order">
+                <button type="button" class="seg-btn active" data-group-mode="name-date">
+                  By Name &rarr; Date
+                </button>
+                <button type="button" class="seg-btn" data-group-mode="date-name">
+                  By Date &rarr; Name
+                </button>
+              </div>
+            </div>
+
+            <div class="toolbar">
+              <div class="search-box">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input
+                  type="search"
+                  id="workSearchInput"
+                  placeholder="Search by feature, work done, or name..."
+                />
+              </div>
+
+              <select id="workFilterPerson" aria-label="Filter by person">
+                <option value="">All Team Members</option>
+              </select>
+
+              <select id="workFilterRange" aria-label="Filter by date range">
+                <option value="all">Full History</option>
+                <option value="today">Today Only</option>
+                <option value="7d">Last 7 Days</option>
+              </select>
+            </div>
+
+            <div id="workLogsContainer" class="grouped-logs-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: PENDING TASKS & IMMUTABLE AUDIT LOG -->
+      <section id="tab-tasks" class="tab-panel">
+        <div class="split-layout">
+          <!-- Create Task Form -->
+          <aside class="card form-card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Add Task</h2>
+                <p class="card-subtitle">Every task entry and status modification is logged permanently with date and time.</p>
+              </div>
+            </div>
+
+            <form id="taskForm" class="form-stack">
+              <div class="form-group">
+                <label for="taskStatusSelect">Status <span class="req">*</span></label>
+                <select id="taskStatusSelect" required>
+                  <option value="Not Started">Not Started</option>
+                  <option value="Ongoing">Ongoing</option>
+                  <option value="Completed">Completed</option>
+                  <option value="NA">NA</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="taskNameInput">Task Name <span class="req">*</span></label>
+                <input
+                  id="taskNameInput"
+                  type="text"
+                  maxlength="200"
+                  placeholder="e.g. Configure Production SSL"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="taskAssignedToSelect">Assigned To <span class="req">*</span></label>
+                  <button type="button" class="inline-link-btn open-add-person">+ Add Person</button>
+                </div>
+                <select id="taskAssignedToSelect" required>
+                  <option value="">Select assignee...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="taskAssignedAtInput">Assigned At (Date &amp; Time) <span class="req">*</span></label>
+                  <button type="button" id="setAssignedNowBtn" class="inline-link-btn">Set to Now</button>
+                </div>
+                <input id="taskAssignedAtInput" type="datetime-local" required />
+              </div>
+
+              <div class="form-group">
+                <label for="taskDescInput">Task Description <span class="req">*</span></label>
+                <textarea
+                  id="taskDescInput"
+                  rows="3"
+                  maxlength="4000"
+                  placeholder="Scope, deliverables, or acceptance criteria..."
+                  required
+                ></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full" id="submitTaskBtn">
+                Create &amp; Log Task
+              </button>
+            </form>
+          </aside>
+
+          <!-- Tasks Table + Immutable Audit Log -->
+          <div class="tasks-main-col">
+            <div class="card content-card">
+              <div class="card-header card-header-wrap">
+                <div>
+                  <h2 class="card-title">Tasks Registry</h2>
+                  <p class="card-subtitle">Change any task's status inline; every change appends an immutable audit log entry.</p>
+                </div>
+              </div>
+
+              <div class="filter-pills" id="taskStatusFilterPills">
+                <button type="button" class="pill-btn active" data-status-filter="ALL">All <span class="pill-count" data-count="ALL">0</span></button>
+                <button type="button" class="pill-btn" data-status-filter="PENDING">Pending <span class="pill-count" data-count="PENDING">0</span></button>
+                <button type="button" class="pill-btn" data-status-filter="Ongoing">Ongoing <span class="pill-count" data-count="Ongoing">0</span></button>
+                <button type="button" class="pill-btn" data-status-filter="Not Started">Not Started <span class="pill-count" data-count="Not Started">0</span></button>
+                <button type="button" class="pill-btn" data-status-filter="Completed">Completed <span class="pill-count" data-count="Completed">0</span></button>
+                <button type="button" class="pill-btn" data-status-filter="NA">NA <span class="pill-count" data-count="NA">0</span></button>
+              </div>
+
+              <div class="toolbar">
+                <div class="search-box">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  <input
+                    type="search"
+                    id="taskSearchInput"
+                    placeholder="Search task name, description, or assignee..."
+                  />
+                </div>
+                <select id="taskFilterAssignee" aria-label="Filter by assignee">
+                  <option value="">All Assignees</option>
+                </select>
+              </div>
+
+              <div class="table-wrap">
+                <table class="data-table" id="tasksTable">
+                  <thead>
+                    <tr>
+                      <th>Status</th>
+                      <th>Task Name &amp; Description</th>
+                      <th>Assigned To</th>
+                      <th>Assigned At</th>
+                      <th>Last Logged</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tasksTableBody">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+              <div id="tasksEmptyState" class="empty-state hidden"></div>
+            </div>
+
+            <!-- Immutable Task Audit Log -->
+            <div class="card content-card">
+              <div class="card-header card-header-wrap">
+                <div>
+                  <h2 class="card-title">
+                    Task Activity &amp; Status Audit Log
+                    <span class="lock-pill">Non-Deletable</span>
+                  </h2>
+                  <p class="card-subtitle">Complete chronological log of all task creations and status modifications with exact date and time.</p>
+                </div>
+                <div class="audit-filter-row">
+                  <select id="auditTaskFilter" aria-label="Filter audit log by task">
+                    <option value="">All Tasks</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table class="data-table audit-table">
+                  <thead>
+                    <tr>
+                      <th>Logged At</th>
+                      <th>Event</th>
+                      <th>Task</th>
+                      <th>Status Transition</th>
+                      <th>Assigned To</th>
+                      <th>Assigned At</th>
+                    </tr>
+                  </thead>
+                  <tbody id="taskLogsTableBody">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+              <div id="taskLogsEmptyState" class="empty-state hidden"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: ADD PEOPLE / TEAM DIRECTORY -->
+      <section id="tab-people" class="tab-panel">
+        <div class="split-layout">
+          <aside class="card form-card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Add People</h2>
+                <p class="card-subtitle">Add team members once so they appear in the Name and Assigned To dropdowns across the workspace.</p>
+              </div>
+            </div>
+
+            <form id="personForm" class="form-stack">
+              <div class="form-group">
+                <label for="personNameInput">Full Name <span class="req">*</span></label>
+                <input
+                  id="personNameInput"
+                  type="text"
+                  maxlength="120"
+                  placeholder="e.g. Priya Sharma"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="personRoleInput">Role / Title <span class="muted-label">(Optional)</span></label>
+                <input
+                  id="personRoleInput"
+                  type="text"
+                  maxlength="120"
+                  placeholder="e.g. Senior Backend Engineer"
+                />
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full" id="submitPersonBtn">
+                Add Person to Directory
+              </button>
+            </form>
+          </aside>
+
+          <div class="card content-card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Team Directory</h2>
+                <p class="card-subtitle">Registered contributors available in dropdown selectors.</p>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Role / Title</th>
+                    <th>Work Logs</th>
+                    <th>Assigned Tasks</th>
+                    <th>Added At</th>
+                  </tr>
+                </thead>
+                <tbody id="peopleTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div id="peopleEmptyState" class="empty-state hidden"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Quick Add Person Modal -->
+  <div id="addPersonModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle" class="card-title">Add Team Member</h3>
+        <button type="button" id="closeModalBtn" class="icon-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="modalPersonForm" class="form-stack">
+        <div class="form-group">
+          <label for="modalPersonName">Full Name <span class="req">*</span></label>
+          <input id="modalPersonName" type="text" maxlength="120" placeholder="e.g. Alex Johnson" required />
+        </div>
+        <div class="form-group">
+          <label for="modalPersonRole">Role / Title <span class="muted-label">(Optional)</span></label>
+          <input id="modalPersonRole" type="text" maxlength="120" placeholder="e.g. Product Designer" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="cancelModalBtn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Person</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
