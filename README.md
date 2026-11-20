@@ -33,6 +33,18 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000). Data is stored locally in `data/tracker.db` when `DATABASE_URL` is not set.
 
+### Using MongoDB (e.g. MongoDB Atlas free M0)
+
+Set `MONGODB_URI` and the app stores everything in MongoDB instead (takes priority over `DATABASE_URL`):
+
+```powershell
+$env:MONGODB_URI = "mongodb+srv://<user>:<password>@<cluster>.mongodb.net/?retryWrites=true&w=majority"
+$env:MONGODB_DB = "ctw_tracker"   # optional, default: ctw_tracker
+npm start
+```
+
+Collections and indexes are created automatically on first start. To also run the test suite against MongoDB, set `MONGODB_TEST_URI`.
+
 Run tests:
 
 ```bash
@@ -41,9 +53,9 @@ npm test
 
 ## Deploying to Render
 
-This repository includes a [`render.yaml`](./render.yaml) Blueprint that provisions:
-- A Node.js Web Service (`ctw-task-checklist`)
-- A managed PostgreSQL database (`ctw-task-checklist-db`) wired via `DATABASE_URL`
+This repository includes a [`render.yaml`](./render.yaml) Blueprint that provisions a Node.js Web Service (`ctw-task-checklist`) backed by MongoDB Atlas. When creating the Blueprint, Render asks for the `MONGODB_URI` secret — paste your Atlas connection string, and allow `0.0.0.0/0` in Atlas **Network Access** so Render can reach the cluster.
+
+> The steps below describe the original Postgres setup; with MongoDB you only need the web service plus `MONGODB_URI`.
 
 ### Steps
 1. In the [Render Dashboard](https://dashboard.render.com/), click **New +** → **Blueprint** (or use the direct Blueprint deploy link: `https://render.com/deploy?repo=https://github.com/AyushMJXLabs/Project-Update-Tracker`).

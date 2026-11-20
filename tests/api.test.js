@@ -6,16 +6,26 @@ import { after, before, describe, it } from 'node:test';
 import { createStore } from '../server/db.js';
 import { createApp } from '../server/index.js';
 
-describe('CTW Updates API', () => {
+// Always runs against SQLite. Set MONGODB_TEST_URI to also run the same suite
+// against MongoDB (uses a throwaway database that is dropped afterwards).
+const backends = [{ dialect: 'sqlite' }];
+if (process.env.MONGODB_TEST_URI) backends.push({ dialect: 'mongodb' });
+
+for (const backend of backends)
+describe(`CTW Updates API (${backend.dialect})`, () => {
   let tmpDir;
   let store;
   let server;
   let baseUrl;
+  const mongoDbName = `ctw_test_${Date.now()}`;
 
   before(async () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctw-updates-test-'));
     const sqlitePath = path.join(tmpDir, 'test.db');
-    store = await createStore({ databaseUrl: '', sqlitePath });
+    store =
+      backend.dialect === 'mongodb'
+        ? await createStore({ mongoUri: process.env.MONGODB_TEST_URI, mongoDbName })
+        : await createStore({ mongoUri: '', databaseUrl: '', sqlitePath });
     const app = createApp(store);
     await new Promise((resolve) => {
       server = app.listen(0, '127.0.0.1', () => {
@@ -28,6 +38,12 @@ describe('CTW Updates API', () => {
 
   after(async () => {
     await new Promise((resolve) => server.close(resolve));
+    if (backend.dialect === 'mongodb') {
+      const { MongoClient } = await import('mongodb');
+      const c = new MongoClient(process.env.MONGODB_TEST_URI);
+      await c.db(mongoDbName).dropDatabase();
+      await c.close();
+    }
     await store.close();
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
@@ -41,11 +57,11 @@ describe('CTW Updates API', () => {
     return { status: res.status, body };
   }
 
-  it('reports healthy sqlite store', async () => {
+  it(`reports healthy ${backend.dialect} store`, async () => {
     const { status, body } = await req('/api/health');
     assert.equal(status, 200);
     assert.equal(body.ok, true);
-    assert.equal(body.dialect, 'sqlite');
+    assert.equal(body.dialect, backend.dialect);
   });
 
   it('adds people and prevents case-insensitive duplicates', async () => {

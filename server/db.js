@@ -20,6 +20,12 @@ function shouldUseSsl(databaseUrl) {
 }
 
 export async function createStore(options = {}) {
+  const mongoUri = options.mongoUri ?? process.env.MONGODB_URI ?? '';
+  if (mongoUri) {
+    const { createMongoStore } = await import('./mongo-store.js');
+    return createMongoStore(mongoUri, options.mongoDbName ?? process.env.MONGODB_DB ?? 'ctw_tracker');
+  }
+
   const databaseUrl = options.databaseUrl ?? process.env.DATABASE_URL ?? '';
 
   if (databaseUrl) {
